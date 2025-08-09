@@ -39,40 +39,55 @@ function App() {
   }
 
   return (
-    <div className='min-h-screen bg-gray-50 flex flex-col items-center p-6'>
-      <header className='text-center mb-8'>
-        <h1 className='text-4xl font-bold text-gray-800 mb-2'>HR Chatbot</h1>
-        <p className='text-gray-600'>Ask a question to find relevant employees</p>
-      </header>
+    <div className='min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4 mb-6'>
+      <div className='w-full max-w-2xl bg-white shadow-lg rounded-lg p-6'>
+        <h1 className='text-3xl font-bold text-center text-gray-800 mb-2'>HR Chatbot</h1>
+        <p className='text-center text-gray-600 mb-6'>Ask a question to find relevant employees</p>
+      </div>
 
-      <main className='w-full max-w-xl bg-white p-6 rounded-xl shadow-md'>
-        <form onSubmit={handleSubmit}>
+      <main className='w-full max-w-xl bg-white p-6 rounded-xl shadow-md mt-5'>
+        <form onSubmit={handleSubmit} className='flex gap-2'>
           <input 
             type='text'
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="e.g., 'Find Python developers with 3+ years experience'"
-            className='flex-1 border border-gray-300 rounded-lg px-4 py-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 '
+            className='flex-grow p-2  border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 '
           />
           <button
             type='submit'
             disabled={loading}
-            className='bg-blue-600 text-white font-medium px-6 py-2 mr-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50'
+            className='px-4 py-2 bg-blue-600 text-white font-semibold rounded-md hover:bg-blue-700 disabled:bg-blue-300'
           >
             {loading ? 'Thinking...' : 'Ask'}
           </button>
         </form>
 
         {response && (
-          <div className='mt-6 bg-gray-100 p-4 rounded-lg overflow-auto'>
-            <pre className="text-sm text-gray-800 whitespace-pre-wrap">
-              {response}
-            </pre>
+          <div className='mt-6 bg-gray-50 p-4 border border-gray-200 rounded-md'>
+            <p className='font-bold text-lg text-gray-800'>{response.split('\n\n')[0]}</p>
+            <ul className='mt-4 space-y-4'>
+              {response.split('\n\n').slice(1).map((employeeText, index) => (
+                <li key={index} className='bg-white p-4 border border-gray-200 rounded-md shadow-sm'>
+                  {employeeText.split('\n').map((line, lineIndex) => {
+                    const isBold = line.startsWith('- Name:') ||
+                                   line.startsWith('- Skills:') || 
+                                   line.startsWith('- Experience:') || 
+                                   line.startsWith('- Projects:');
+                    return (
+                      <p key={lineIndex} className={`text-gray-700 ${isBold ? 'font-bold' : ''}`}>
+                        {line}
+                      </p>
+                    );
+                  })}
+                </li>
+              ))}
+            </ul>
           </div>
         )}
 
         {error && (
-          <div className="mt-6 p-4 bg-red-100 text-red-700 rounded-lg">
+          <div className="mt-6 p-4 bg-red-100 border border-red-400 text-red-700 rounded-md">
             <p>{error}</p>
           </div>
         )}
