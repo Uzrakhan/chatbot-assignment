@@ -57,7 +57,7 @@ function App() {
           <button
             type='submit'
             disabled={loading}
-            className='bg-blue-600 text-white font-medium px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50'
+            className='bg-blue-600 text-white font-medium px-6 py-2 mr-3 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50'
           >
             {loading ? 'Thinking...' : 'Ask'}
           </button>

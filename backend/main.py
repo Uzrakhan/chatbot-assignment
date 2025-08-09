@@ -3,8 +3,10 @@ import faiss
 import numpy as np
 import os
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
+
 # The OpenAI import is no longer needed for the "Simple" approach
 # from openai import OpenAI
 # The dotenv import is no longer needed without the OpenAI key
@@ -50,6 +52,20 @@ print("FAISS index created with", index.ntotal, "vectors.")
 # --- 3. FASTAPI APPLICATION ENDPOINTS ---
 app = FastAPI()
 
+origins = [
+    "http://localhost",
+    "http://localhost:5173"
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
 class ChatRequest(BaseModel):
     query: str
 
@@ -76,7 +92,7 @@ def chat_with_rag(request: ChatRequest):
         response_text = "Based on your query, here are the most relevant candidates:\n\n"
         for emp in retrieved_employees:
             response_text += (
-                f"- **Name:** {emp['name']}\n"
+                f"  - Name: {emp['name']}\n"
                 f"  - Skills: {', '.join(emp['skills'])}\n"
                 f"  - Experience: {emp['experience_years']} years\n"
                 f"  - Projects: {', '.join(emp['projects'])}\n\n"
