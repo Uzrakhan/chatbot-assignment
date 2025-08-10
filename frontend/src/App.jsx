@@ -2,6 +2,7 @@ import { useState } from 'react'
 import reactLogo from './assets/react.svg'
 import viteLogo from '/vite.svg'
 import './App.css'
+import ReactMarkdown from 'react-markdown'
 
 function App() {
   const [ query, setQuery] = useState('');
@@ -69,17 +70,7 @@ function App() {
             <ul className='mt-4 space-y-4'>
               {response.split('\n\n').slice(1).map((employeeText, index) => (
                 <li key={index} className='bg-white p-4 border border-gray-200 rounded-md shadow-sm'>
-                  {employeeText.split('\n').map((line, lineIndex) => {
-                    const isBold = line.startsWith('- Name:') ||
-                                   line.startsWith('- Skills:') || 
-                                   line.startsWith('- Experience:') || 
-                                   line.startsWith('- Projects:');
-                    return (
-                      <p key={lineIndex} className={`text-gray-700 ${isBold ? 'font-bold' : ''}`}>
-                        {line}
-                      </p>
-                    );
-                  })}
+                  <ReactMarkdown  children={employeeText} />
                 </li>
               ))}
             </ul>
