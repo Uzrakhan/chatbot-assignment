@@ -82,7 +82,7 @@ def chat_with_rag(request: ChatRequest):
         
         retrieved_employees = [employees_data[i] for i in indices[0]]
         
-        # Get the number od candidates found
+        # Get the number of candidates found
         num_candidates = len(retrieved_employees)
 
 
@@ -94,38 +94,63 @@ def chat_with_rag(request: ChatRequest):
 
         # Use a dynamic introductory sentence
         candidate_word = "candidate" if num_candidates == 1 else "candidates"
-        response_lines.append(f"Based on your requirements , I found {num_candidates} excellent {candidate_word}:")
 
-        # --- Domain extraction ---
+        # --Expertise detection
+        expertise_keywords = [
+            "machine learning", "ml", "deep learning", "ai", "artificial intelligence",
+            "frontend", "backend", "fullstack", "devops", "cloud", "data science", "nlp",
+            "computer vision", "cybersecurity", "mobile development", "blockchain"
+        ]
+        query_lower = request.query.lower()
+        expertise_found = None
+        for keyword in expertise_keywords:
+            if keyword in query_lower:
+                expertise_found = keyword
+                break
+
+        if expertise_found: 
+            if expertise_found == "ml":
+                expertise_found = "ML"
+            else:
+                expertise_found = expertise_found.title()
+
+        # --- Domain detection
         domain_keywords = [
-            "healthcare", "finance", "banking", "eductaion", "ecommerce", "cloud",
-            "iot", "machine learning", "ai", "logistics", "retail", "manufacturing"
+            "healthcare", "finance", "banking", "education", "ecommerce", "cloud",
+            "iot", "logistics", "retail", "manufacturing", "gaming"
         ]
 
-        detected_domains = set()
+        domain_found = None
+        for keyword in domain_keywords:
+            if keyword in query_lower:
+                domain_found = keyword
+                break
 
-        for emp in retrieved_employees:
-            for proj in emp['projects']:
-                proj_lower = proj.lower()
-                for keyword in domain_keywords:
-                    if keyword in proj_lower:
-                        detected_domains.add(keyword)
-        
-        if detected_domains:
-            # Pick the most frequent domain in retrived set
-            domain = sorted(detected_domains, key=lambda k: sum(k in p.lower() for emp in retrieved_employees for p in emp['projects']), reverse=True)[0]
-        else:
-            #Fallback to meaningful word selection
-            ignore_words = {"system", "platform", "tool", "app", "website", "dashboard", "portal", "generator", "tracker"}
-            all_words = []
+        # Fallback: detect domain from projects
+        if not domain_found:
+            detected_domains = set()
             for emp in retrieved_employees:
                 for proj in emp['projects']:
-                    for word in proj.lower().split():
-                        if len(word) > 3 and word not in ignore_words:
-                            all_words.append(word)
-            domain = max(set(all_words), key=all_words.count) if all_words else "projects"
-                         
+                    proj_lower = proj.lower()
+                    for keyword in domain_keywords:
+                        if keyword in proj_lower:
+                            detected_domains.add(keyword)
 
+            if detected_domains:
+                domain_found = list(detected_domains)[0]
+
+        #---Intro line
+        if expertise_found and domain_found:
+            intro_line = f"Based on your requirements for {expertise_found} expertise in {domain_found}, I found {num_candidates} excellent {candidate_word}:"
+        elif expertise_found:
+            intro_line = f"Based on your requirements for {expertise_found} expertise, I found {num_candidates} excellent {candidate_word}:"
+        elif domain_found: 
+            intro_line = f"Based on your requirements in {domain_found}, I found {num_candidates} excellent {candidate_word}:"
+        else:
+            intro_line = f"Based on your requirements, I found {num_candidates} excellent {candidate_word}:"
+
+        response_lines = [intro_line]
+        
 
         #---Candidate details
         for idx, emp in enumerate(retrieved_employees):
@@ -155,19 +180,19 @@ def chat_with_rag(request: ChatRequest):
         if num_candidates == 1:
             closing = (
                 f"This candidate has the technical depth and domain expertise you need. "
-                f"Would you like me to provide more details about their specific {domain} projects "
+                f"Would you like me to provide more details about their specific {domain_found or 'projects'} projects "
                 f"or check their availability for meetings?"
             )
         elif num_candidates == 2:
             closing = (
                 f"Both have the technical depth and domain expertise you need. "
-                f"Would you like me to provide more details about their specific {domain} projects "
+                f"Would you like me to provide more details about their specific {domain_found or 'projects'} projects "
                 f"or check their availability for meetings?"
             )
         else: 
             closing = (
                 f"All of them have the technical depth and domain expertise you need. "
-                f"Would you like me to provide more details about their specific {domain} projects "
+                f"Would you like me to provide more details about their specific {domain_found or 'projects'} projects "
                 f"or check their availability for meetings?"
             )
 
