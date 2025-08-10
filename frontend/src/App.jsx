@@ -50,7 +50,12 @@ function App() {
       </div>
 
       <main className='w-full max-w-3xl bg-white p-6 rounded-xl shadow-md mt-5'>
-        <form onSubmit={handleSubmit} className='flex gap-2'>
+        <form 
+          onSubmit={(e) => {
+            handleSubmit(e);
+            e.target.reset(); // clears form fields
+          }} 
+          className='flex gap-2'>
           <input 
             type='text'
             value={query}
