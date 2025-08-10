@@ -30,7 +30,10 @@ function App() {
       }
 
       const data = await res.json();
-      setResponse(data.response)
+      setResponse(data.response);
+
+      // Clear input only if response is successful
+      setQuery('');
     }catch(e) {
       console.error("Failed to fetch:", e);
       setError("Failed to get a response from the server. Please ensure the backend is running.");
