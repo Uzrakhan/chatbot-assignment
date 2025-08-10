@@ -112,9 +112,7 @@ The final decision to use a non-LLM "smart formatting" approach was a deliberate
 **Live Demo**: https://chatbot-assignment-beige.vercel.app/
 
 **Local Demo Screenshot**:
-<p align="center">
-  <img src="frontend/public/Screenshot.png" alt="HR Chatbot Screenshot" width="700">
-</p>
+![HR Chatbot Screenshot](frontend/public/Screenshot.png)
 
 
 
