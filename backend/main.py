@@ -50,13 +50,13 @@ app = FastAPI()
 
 origins = [
     "http://localhost",
-    "https://chatbot-assignment-beige.vercel.app/",
+    "https://chatbot-assignment-beige.vercel.app"
     "http://localhost:5173"
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
