@@ -1,4 +1,5 @@
-**HR Resource Query Chatbot**
+**HR Resource Query Chatbot** 🚀🚀
+
 An intelligent chatbot designed to help HR managers query an employee database for technical skills, experience, and projects.
 
 **Overview**
