@@ -50,6 +50,7 @@ app = FastAPI()
 
 origins = [
     "http://localhost",
+    "https://chatbot-assignment-beige.vercel.app/",
     "http://localhost:5173"
 ]
 
