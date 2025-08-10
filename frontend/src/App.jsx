@@ -6,14 +6,14 @@ import ReactMarkdown from 'react-markdown'
 
 function App() {
   const [ query, setQuery] = useState('');
-  const [response, setReponse] = useState(null);
+  const [response, setResponse] = useState(null);
   const [loading,setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true)
-    setReponse(null);
+    setResponse(null);
     setError(null);
 
     try{
@@ -30,7 +30,7 @@ function App() {
       }
 
       const data = await res.json();
-      setReponse(data.response)
+      setResponse(data.response)
     }catch(e) {
       console.error("Failed to fetch:", e);
       setError("Failed to get a response from the server. Please ensure the backend is running.");
@@ -41,12 +41,12 @@ function App() {
 
   return (
     <div className='min-h-screen bg-gray-100 flex flex-col items-center justify-center p-4 mb-6'>
-      <div className='w-full max-w-2xl bg-white shadow-lg rounded-lg p-6'>
+      <div className='w-full max-w-3xl bg-white shadow-lg rounded-lg p-6'>
         <h1 className='text-3xl font-bold text-center text-gray-800 mb-2'>HR Chatbot</h1>
         <p className='text-center text-gray-600 mb-6'>Ask a question to find relevant employees</p>
       </div>
 
-      <main className='w-full max-w-xl bg-white p-6 rounded-xl shadow-md mt-5'>
+      <main className='w-full max-w-3xl bg-white p-6 rounded-xl shadow-md mt-5'>
         <form onSubmit={handleSubmit} className='flex gap-2'>
           <input 
             type='text'
@@ -66,14 +66,17 @@ function App() {
 
         {response && (
           <div className='mt-6 bg-gray-50 p-4 border border-gray-200 rounded-md'>
-            <p className='font-bold text-lg text-gray-800'>{response.split('\n\n')[0]}</p>
+            <p className='font-bold text-lg text-gray-800'>{response.intro}</p>
             <ul className='mt-4 space-y-4'>
-              {response.split('\n\n').slice(1).map((employeeText, index) => (
+              {response.candidates.map((employeeText, index) => (
                 <li key={index} className='bg-white p-4 border border-gray-200 rounded-md shadow-sm'>
                   <ReactMarkdown  children={employeeText} />
                 </li>
               ))}
             </ul>
+
+            {/* Closing */}
+            <p className='mt-6 text-gray-700'>{response.closing}</p>
           </div>
         )}
 
