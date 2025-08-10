@@ -54,7 +54,6 @@ def read_root():
 
 @app.post("/chat")
 @app.post("/chat")
-@app.post("/chat")
 def chat_with_rag(request: ChatRequest):
     try:
         query_lower = request.query.lower().strip()
@@ -92,7 +91,7 @@ def chat_with_rag(request: ChatRequest):
                 "closing": "I couldn't find any employees matching that query."
             }}
 
-        # --- Expertise & Domain detection ---
+        # --- Expertise & Domain detection (ONLY from query) ---
         expertise_keywords = [
             "machine learning", "ml", "deep learning", "ai", "artificial intelligence",
             "frontend", "backend", "fullstack", "devops", "cloud", "data science", "nlp",
@@ -105,16 +104,6 @@ def chat_with_rag(request: ChatRequest):
             "iot", "logistics", "retail", "manufacturing", "gaming"
         ]
         domain_found = next((kw for kw in domain_keywords if kw in query_lower), None)
-
-        if not domain_found:
-            for emp in retrieved_employees:
-                for proj in emp['projects']:
-                    for keyword in domain_keywords:
-                        if keyword in proj.lower():
-                            domain_found = keyword
-                            break
-                if domain_found:
-                    break
 
         # --- Intro line ---
         num_candidates = len(retrieved_employees)
