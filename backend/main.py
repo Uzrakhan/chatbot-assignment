@@ -7,10 +7,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from sentence_transformers import SentenceTransformer
 
-# The OpenAI import is no longer needed for the "Simple" approach
-# from openai import OpenAI
-# The dotenv import is no longer needed without the OpenAI key
-# from dotenv import load_dotenv
 
 # --- 1. CONFIGURATION AND IMPORTS ---
 # No LLM client configuration is needed for the "Simple" method.
@@ -85,21 +81,99 @@ def chat_with_rag(request: ChatRequest):
         
         retrieved_employees = [employees_data[i] for i in indices[0]]
         
-        # b. Generation (Simple Formatting): Create a response string from the retrieved data
-        if not retrieved_employees:
+        # Get the number od candidates found
+        num_candidates = len(retrieved_employees)
+
+
+        # b. Generation (Mnaual Formatting): Create a response string from the retrieved data
+        if num_candidates == 0:
             return {"response": "I couldn't find any employees matching that query."}
 
-        response_text = "Based on your query, here are the most relevant candidates:\n\n"
+        response_lines = []
+
+        # Use a dynamic introductory sentence
+        candidate_word = "candidate" if num_candidates == 1 else "candidates"
+        response_lines.append(f"Based on your requirements , I found {num_candidates} excellent {candidate_word}:")
+
+        # --- Domain extraction ---
+        domain_keywords = [
+            "healthcare", "finance", "banking", "eductaion", "ecommerce", "cloud",
+            "iot", "machine learning", "ai", "logistics", "retail", "manufacturing"
+        ]
+
+        detected_domains = set()
+
         for emp in retrieved_employees:
-            response_text += (
-                f"  - Name: {emp['name']}\n"
-                f"  - Skills: {', '.join(emp['skills'])}\n"
-                f"  - Experience: {emp['experience_years']} years\n"
-                f"  - Projects: {', '.join(emp['projects'])}\n\n"
-            )
+            for proj in emp['projects']:
+                proj_lower = proj.lower()
+                for keyword in domain_keywords:
+                    if keyword in proj_lower:
+                        detected_domains.add(keyword)
         
-        return {"response": response_text}
-    
+        if detected_domains:
+            # Pick the most frequent domain in retrived set
+            domain = sorted(detected_domains, key=lambda k: sum(k in p.lower() for emp in retrieved_employees for p in emp['projects']), reverse=True)[0]
+        else:
+            #Fallback to meaningful word selection
+            ignore_words = {"system", "platform", "tool", "app", "website", "dashboard", "portal", "generator", "tracker"}
+            all_words = []
+            for emp in retrieved_employees:
+                for proj in emp['projects']:
+                    for word in proj.lower().split():
+                        if len(word) > 3 and word not in ignore_words:
+                            all_words.append(word)
+            domain = max(set(all_words), key=all_words.count) if all_words else "projects"
+                         
+
+
+        #---Candidate details
+        for idx, emp in enumerate(retrieved_employees):
+            pronoun = "He" if emp.get('gender') == 'male' else "She"
+            possessive = "His" if emp.get('gender') == 'male' else "Her"
+
+            if idx == 0:
+                #First candidate
+                text = (
+                    f"**{emp['name']}** would be perfect for this role. "
+                    f"{pronoun} has {emp['experience_years']} years of experience "
+                    f"and is skilled in {', '.join(emp['skills'])}. "
+                    f"{possessive} projects include: {', '.join(emp['projects'])}. "
+                    f"{pronoun} is currently {emp['availability']}."
+                )
+            else:
+                #Subsequent candidates
+                text = (
+                    f"**{emp['name']}** is another strong candidate with {emp['experience_years']} years of experience. "
+                    f"{pronoun} knows {', '.join(emp['skills'])} "
+                    f"and has worked on {', '.join(emp['projects'])}. "
+                    f"{pronoun} is currently {emp['availability']}."
+                )
+            response_lines.append(text)
+
+        #---Closing 
+        if num_candidates == 1:
+            closing = (
+                f"This candidate has the technical depth and domain expertise you need. "
+                f"Would you like me to provide more details about their specific {domain} projects "
+                f"or check their availability for meetings?"
+            )
+        elif num_candidates == 2:
+            closing = (
+                f"Both have the technical depth and domain expertise you need. "
+                f"Would you like me to provide more details about their specific {domain} projects "
+                f"or check their availability for meetings?"
+            )
+        else: 
+            closing = (
+                f"All of them have the technical depth and domain expertise you need. "
+                f"Would you like me to provide more details about their specific {domain} projects "
+                f"or check their availability for meetings?"
+            )
+
+        response_lines.append(closing)        
+
+        return {"response": "\n\n".join(response_lines)}
+
     except Exception as e:
         print(f"An error occurred in the chat endpoint: {e}")
         raise HTTPException(status_code=500, detail=str(e))
